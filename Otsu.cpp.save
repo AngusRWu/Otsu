@@ -1,0 +1,47 @@
+
+nnnnn#include <iostream>
+#include <filesystem>
+#include <vector>
+#include <algorithm>
+#include <sys/ioctl.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <opencv2/highgui.hpp>
+#include <opencv2/imgcodecs.hpp>
+#include <opencv2/imgproc.hpp>
+#include <opencv2/opencv.hpp>
+
+
+cv::Mat computeHistogram (cv::Mat image) {
+    cv::Mat histogram; int histSize = 256;
+    float range[] = { 0, 256 };
+    const float* histRange[] = { range };
+    int channels[] = {0};
+    //  calcHist( &hsv, 1, channels, cv::Mat(), // do not use mask
+    //          hist, 2, histSize, ranges,
+    //          true, // the histogram is uniform
+    //          false );
+    cv::calcHist(&image, 1, channels, cv::Mat(), histogram, 1, &histSize, histRange, true, false);
+    // calcHist( &image, 1, 0, cv::Mat(), histogram, 1, &histSize, &histRange);
+    // cv::calcHist( &bgr_planes[2], 1, 0, Mat(), r_hist, 1, &histSize, histRange, uniform, accumulate );
+    // cv::normalize(histogram, histogram, 0, image.rows, cv::NORM_MINMAX, -1, cv::Mat());
+    return histogram;
+}
+
+
+
+int main (int argc, char *argv[]) {
+    try {
+        // store the directory path into string path from the command line
+        std::string path = argv[1];
+        cv::Mat grayscaleImage = cv::imread(path); 
+
+        std::cout << computeHistogram(grayscaleImage) << std::endl;
+
+    }
+    catch (std::exception& e) {
+        std::cout << "Directory not opening" << std::endl;
+    }
+    
+    return 0;
+}
