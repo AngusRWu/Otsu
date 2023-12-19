@@ -118,32 +118,73 @@ int determineMiddlePoint(std::vector<int> histogramFirst, std::vector<int>histog
     return index;
 }
 
-cv::Mat newImage(cv::Mat originalImage, std::vector<int> histogram, double threshold, int middlePoint)
+cv::Mat newImage(cv::Mat originalImage, std::vector<int> histogram, double threshold, int minIndex)
 {
-    cv::Mat otsuImage(originalImage.size().width, originalImage.size().height, CV_8UC3, cv::Scalar(0, 0, 0));
+    cv::Mat otsuImage(originalImage.size().width, originalImage.size().height, CV_8UC3, cv::Scalar(255, 255, 255));
     cv::Vec3b white(255, 255, 255);
     cv::Vec3b black(0, 0, 0);
 
     // Change the comparison value to get different grayscale images. Ex: histogram.size / 2, middle point, middle point + whatever value you want.
-    for (int i = 0; i < histogram.size() / 2; i++) {
-        double intensity = histogram[i];
-        if (intensity > threshold) 
-        {
-            cv::Vec3b color(i, i, i);
-            for (int y = 0; y < originalImage.size().height; y++)
-            {
-                for (int x = 0; x < originalImage.size().width; x++)
-                {
-                    cv::Vec3b pixelValue = originalImage.at<cv::Vec3b>(cv::Point(y, x));
-                    if (pixelValue == color) 
-                    {
-                        otsuImage.at<cv::Vec3b>(cv::Point(y, x)) = white;
-                    }
-                }
+    // for (int i = 0; i < histogram.size(); i++) {
+    //     double intensity = histogram[i];
+    //     if (intensity >= threshold) 
+    //     {
+    //         cv::Vec3b color(i, i, i);
+    //         for (int y = 0; y < originalImage.size().height; y++)
+    //         {
+    //             for (int x = 0; x < originalImage.size().width; x++)
+    //             {
+    //                 cv::Vec3b pixelValue = originalImage.at<cv::Vec3b>(cv::Point(y, x));
+    //                 if (pixelValue == color) 
+    //                 {
+    //                     otsuImage.at<cv::Vec3b>(cv::Point(y, x)) = black;
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
+
+    for (int y = 0; y < originalImage.size().height; y++) {
+        for (int x = 0; x < originalImage.size().width; x++) {
+            cv::Vec3b pixelValue = originalImage.at<cv::Vec3b>(cv::Point(y, x));
+            int colorValue = pixelValue.val[0];
+            if (histogram[colorValue] > threshold && colorValue < minIndex) {
+                otsuImage.at<cv::Vec3b>(cv::Point(y, x)) = black;
             }
+            
         }
     }
+
     return otsuImage;
+}
+
+std::vector<double> getAllThresholds (std::vector<int> histogram) {
+    std::vector<double> thresholds;
+
+    for (int i = 0; i < histogram.size(); i++) {
+        std::vector<int> firstHalf = getPartOfVector(0, i, histogram);
+        std::vector<int> secondHalf = getPartOfVector(i, histogram.size(), histogram);
+
+        double firstHalfSTD = calculateStandardDeviation(firstHalf, firstHalf.size());
+        double secondHalfSTD = calculateStandardDeviation(secondHalf, secondHalf.size());
+        double threshold = std::abs(firstHalfSTD - secondHalfSTD);
+        thresholds.push_back(threshold);
+    }
+
+    return thresholds;
+
+}
+
+int min (std::vector<double> thresholds) {
+    int min = 10000;
+    int index = -1;
+    for (int i = 0; i < thresholds.size(); i++) {
+        if (thresholds[i] < min) {
+            min = thresholds[i];
+            index = i;
+        }
+    }
+    return index;
 }
 
 int main(int argc, char *argv[])
@@ -156,21 +197,30 @@ int main(int argc, char *argv[])
         std::vector<int> values = computeHistogram(grayscaleImage);
         // std::cout << calculateStandardDeviation(values) << std::endl;
 
-        std::vector<int> firstHalf = getPartOfVector(0, values.size() / 2, values);
-        std::vector<int> secondHalf = getPartOfVector((values.size() / 2) + 1, values.size(), values);
+        // std::vector<int> firstHalf = getPartOfVector(0, values.size() / 2, values);
+        // std::vector<int> secondHalf = getPartOfVector((values.size() / 2) + 1, values.size(), values);
 
-        double firstHalfSTD = calculateStandardDeviation(firstHalf, firstHalf.size());
-        double secondHalfSTD = calculateStandardDeviation(secondHalf, secondHalf.size());
-        double threshold = std::abs(firstHalfSTD - secondHalfSTD);
+        // double firstHalfSTD = calculateStandardDeviation(firstHalf, firstHalf.size());
+        // double secondHalfSTD = calculateStandardDeviation(secondHalf, secondHalf.size());
+        // double threshold = std::abs(firstHalfSTD - secondHalfSTD);
         // std::cout << firstHalfSTD << std::endl;
         // std::cout << secondHalfSTD << std::endl;
         // std::cout << threshold << std::endl;
 
-        int middlePoint = determineMiddlePoint(firstHalf, secondHalf, values);
+        // int middlePoint = determineMiddlePoint(firstHalf, secondHalf, values);
 
-        std::cout << middlePoint << std::endl;
+        // std::cout << middlePoint << std::endl;
 
-        cv::Mat otsuImage = newImage(grayscaleImage, values, threshold, middlePoint);
+        std::vector<double> thresholds = getAllThresholds(values);
+        int count = 0;
+        for (auto &value : thresholds) {
+            std::cout << value << std::endl;
+            count++;
+        }
+        std::cout << count << std::endl;
+        int minIndex = min(thresholds);
+        double min = thresholds[minIndex];
+        cv::Mat otsuImage = newImage(grayscaleImage, values, min, minIndex);
         cv::imwrite("OtsuImage.png", otsuImage);
     }
     catch (std::exception &e)
