@@ -9,6 +9,9 @@
 #include <opencv2/imgproc.hpp>
 #include <opencv2/opencv.hpp>
 
+
+// Method that is used to compute the histogram color values 
+// This Method only calculates values for gray-scaled Images
 std::vector<int> computeHistogram(cv::Mat image)
 {
     // cv::Mat histogram;
@@ -33,6 +36,8 @@ std::vector<int> computeHistogram(cv::Mat image)
     return histogram;
 }
 
+
+// Does the numerator calculation of the standard deviation equation
 double numeratorCalculation(std::vector<int> data, double mean)
 {
     double summation = 0;
@@ -46,6 +51,7 @@ double numeratorCalculation(std::vector<int> data, double mean)
     return summation;
 }
 
+// Calculates the standard deviation given the data and size
 double calculateStandardDeviation(std::vector<int> data, int size)
 {
     double mean, sum = 0;
@@ -62,6 +68,7 @@ double calculateStandardDeviation(std::vector<int> data, int size)
     return std::pow((numerator / size), 0.5);
 }
 
+// Calculates the standard deviation given only the data
 double calculateStandardDeviation(std::vector<int> data)
 {
     double mean, sum = 0;
@@ -78,6 +85,8 @@ double calculateStandardDeviation(std::vector<int> data)
     return std::pow((numerator / data.size()), 0.5);
 }
 
+// Gets part of a vector from a whole vector given the start and end position of the vector and the 
+// the whole vector
 std::vector<int> getPartOfVector(int start, int end, std::vector<int> data)
 {
     std::vector<int> freshVector;
@@ -90,6 +99,7 @@ std::vector<int> getPartOfVector(int start, int end, std::vector<int> data)
     return freshVector;
 }
 
+// Calculates the max value out of the vector and returns the index of the max value
 int max (std::vector<int> histogram) {
     int max = -1;
     int index = -1;
@@ -101,7 +111,7 @@ int max (std::vector<int> histogram) {
     }
     return index;
 }
-
+// Shit method that wrote because I'm stupid
 int determineMiddlePoint(std::vector<int> histogramFirst, std::vector<int>histogramSecond, std::vector<int> originalHistogram) {
     int firstHistoMax = max(histogramFirst);
     int secondHistoMax = max(histogramSecond);
@@ -118,6 +128,8 @@ int determineMiddlePoint(std::vector<int> histogramFirst, std::vector<int>histog
     return index;
 }
 
+// Generates the new image from the Otsu Method or the all the previous methods that I wrote above 
+// this method, which is now used to create a new image.
 cv::Mat newImage(cv::Mat originalImage, std::vector<int> histogram, double threshold, int minIndex)
 {
     cv::Mat otsuImage(originalImage.size().width, originalImage.size().height, CV_8UC3, cv::Scalar(255, 255, 255));
@@ -158,6 +170,7 @@ cv::Mat newImage(cv::Mat originalImage, std::vector<int> histogram, double thres
     return otsuImage;
 }
 
+// generates all possible thresholds and stores in a vector
 std::vector<double> getAllThresholds (std::vector<int> histogram) {
     std::vector<double> thresholds;
 
@@ -175,8 +188,10 @@ std::vector<double> getAllThresholds (std::vector<int> histogram) {
 
 }
 
+
+// used to determine the lowest threshold value that is used in the Otsu method
 int min (std::vector<double> thresholds) {
-    int min = INT_MAX;
+    int min = 10000;
     int index = -1;
     for (int i = 0; i < thresholds.size(); i++) {
         if (thresholds[i] < min) {
