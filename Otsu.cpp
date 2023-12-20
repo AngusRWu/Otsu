@@ -191,7 +191,7 @@ std::vector<double> getAllThresholds (std::vector<int> histogram) {
 
 // used to determine the lowest threshold value that is used in the Otsu method
 int min (std::vector<double> thresholds) {
-    int min = 10000;
+    int min = INT_MAX;
     int index = -1;
     for (int i = 0; i < thresholds.size(); i++) {
         if (thresholds[i] < min) {
