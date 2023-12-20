@@ -176,7 +176,7 @@ std::vector<double> getAllThresholds (std::vector<int> histogram) {
 }
 
 int min (std::vector<double> thresholds) {
-    int min = 10000;
+    int min = INT_MAX;
     int index = -1;
     for (int i = 0; i < thresholds.size(); i++) {
         if (thresholds[i] < min) {
